@@ -9,12 +9,13 @@
 #include "TLine.h"
 #include "TCanvas.h"
 #include <iostream>
+//#include "yjUtility.h"
 
 using namespace std;
 
 
 static double rangeMin = 200;
-static string date = "20151126";
+static string date = "20151128";
 static bool doUPC = 0;
 static bool express = 0;
 
@@ -53,6 +54,11 @@ TH1* scale(string var, TTree* nt, double s = 1, TCut cut = ""){
 
    if(var == "hiEB"){
       xmax = 5000;
+      rangeMin = 200;
+   }
+
+   if(var == "hiEE"){
+      xmax = 4000;
       rangeMin = 200;
    }
 
@@ -104,6 +110,7 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
    TFile *infData, *infMC, *infUPC;
    TTree *tref, *t, *tupc;
 
+   if(run == 262784) infData = TFile::Open("root://eoscms.cern.ch//eos/cms//store/group/phys_heavyions/velicanu/forest/Run2015E/HIExpressPhysics/Merged/HIForestExpress_run262784.root");
    if(run == 262548) infData = TFile::Open("root://eoscms.cern.ch//eos/cms/store/group/phys_heavyions/velicanu/forest/Run2015E/HIExpressPhysics/Merged/HIForestMinbiasUPC_run262548.root");
    if(run == 262315) infData =  TFile::Open("root://eoscms.cern.ch//eos/cms/store/group/phys_heavyions/velicanu/forest/Run2015E/HIExpressPhysics/Merged/HiForestStreamer_Run262314-262315.root");
 
@@ -155,11 +162,17 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
 
    if(var == "hiHF" || var == "hiHFhit"){
       scaleMin = 0.45;
+     // scaleMin = 0.25;
    }
 
    if(var == "hiNpix"){
-      scaleMin = 0.9;
+      scaleMin = 1.0;
    }
+
+   if(var == "hiEE"){
+      scaleMin = 0.50;
+   }
+
 
 
    for(int i = 0; i < N; ++i){  
