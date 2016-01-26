@@ -14,23 +14,61 @@
 #include <TH2F.h>
 #include <TGaxis.h>
 #include <TDatime.h>
-#include <iostream>
 #include <TMath.h>
 #include <TFile.h>
 #include <TTree.h>
 #include <TH1.h>
 #include <TStyle.h>
+#include "TROOT.h"
+#include "TChain.h"
 
 #include <iostream>     // std::cout
 #include <ctime>        // std::clock()
 #include <algorithm>    // std::find()
 #include <iomanip>      // std::setprecision()
 #include <vector>
+#include <fstream>
+#include <stdlib.h>
+#include <string.h>
+
 using namespace std;
 
 const int col[] = {1,2,3,4,6,7,28,46,41};
 const int ycol[] = {8,9,28,46,41};
 const int marker[] = {24,25,26,27,28,29,31,33,34};
+
+void MergeTrees(TChain& tree, std::ifstream& filelist)
+{
+  if (not (filelist.is_open())) {
+    std::cerr << "failed in open." << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  char line[BUFSIZ];
+  int counter = 0; 
+
+  while (not (filelist.eof())) {
+    filelist.getline(line, sizeof(line));
+
+    if (strcmp(line, "") == 0) continue;
+
+    TFile a(line);
+    if (!a.IsOpen()) {
+      std::cerr << "failed in open :" << line << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    if (gROOT->FindObject(tree.GetName()) == 0) {
+      std::cerr << tree.GetName() << " is not found in :" << line << std::endl;
+      exit(EXIT_FAILURE);
+    }
+
+    counter ++ ;
+    tree.AddFile(line);
+  }
+
+  std::cout << counter << " files are loaded." << std::endl;
+  return;
+}
 
 void yjStyleRoot(){
     gStyle -> SetOptStat(0);
