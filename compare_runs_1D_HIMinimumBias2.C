@@ -6,11 +6,10 @@
 const int colhere[] = {1,2,4,kYellow+2,6,kGreen+2,46,kOrange,kViolet,kOrange+10};
 void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, const char* dataset, bool presclOn);
 //void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, const char* dataset, bool presclOn = 1);
-void compare_runs_1D(
-        const char* trigCut = "HLT_HIL1MinimumBiasHF1AND_v1 && pcollisionEventSelection",
-        //const char* trigCut = "HLT_HIL1MinimumBiasHF1AND_v1 && pcollisionEventSelection",
-        const char* cap= "_HLT_HF1AND_pcollisionEvnetSelection",
-        const char* dataset="HIMinimumBias1",
+void compare_runs_1D_HIMinimumBias2(
+        const char* trigCut = "pcollisionEventSelection",
+        const char* cap= "_rightTrigger_pcollisionEvnetSelection",
+        const char* dataset="HIMinimumBias2",
         bool presclOn=1)
 {
     TStopwatch timer;
@@ -45,16 +44,15 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
     //string run[] =
     //{"262620", "262640", "262656", "262694", "262695", "262703"};
     
-       string run[] = 
-       {"262620", "262640", "262656", "262694", "262695", "262703", 
-       "262726", "262735", "262768", "262784", "262811", "262816", 
-       "262818", "262834", "262837", "262893", "262921", "262988", 
-       "263005", "263022", "263035", "263261", "263286", "263322",
-       "263333", "263349", "263362", "263379", "263400", "263410"};
+       int run[] = 
+       {262620, 262640, 262656, 262694, 262695, 262703, 
+       262726, 262735, 262768, 262784, 262811, 262816, 
+       262818, 262834, 262837, 262893, 262921, 262988, 
+       263005, 263022, 263035, 263261, 263286, 263322,
+       263333, 263349, 263362, 263379, 263400, 263410,
+       263502, 263584, 263604, 263614};
        
-       //"263502", "263584", "263604", "263614"};
-       
-    const int Nrun = sizeof(run)/sizeof(string);
+    const int Nrun = sizeof(run)/sizeof(int);
     const int Ncomp = 6;
     int Nset =0;
     if(Nrun%Ncomp!=0) Nset = (int)Nrun/Ncomp + 1;
@@ -75,8 +73,8 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
     TH1D* h[Nrun];
     for(int i=0; i<Nrun; ++i){
         TFile* f1;
-        f1 = TFile::Open(Form("%sEventTree_PbPb_data_%s_run%s_15Feb.root",dir,dataset,run[i].data()));
-        if(f1->IsZombie()) { cout << run[i].data() << " doesn't exist!! " << endl; continue;}
+        f1 = TFile::Open(Form("%sEventTree_PbPb_data_%s_run%d_15Feb.root",dir,dataset,run[i]));
+        if(f1->IsZombie()) { cout << run[i] << " doesn't exist!! " << endl; continue;}
         cout << "Open file : " << f1->GetName() << endl;
         TTree* t1 = (TTree*) f1 -> Get("hiEvtAnalyzer/HiTree");
         TTree* t1_skim = (TTree*) f1 -> Get("skimanalysis/HltTree");
@@ -86,12 +84,12 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
         t1->AddFriend(t1_hlt);
         t1->AddFriend(t1_track);
         nEvents[i] = t1->GetEntries(trigCut);
-        cout << run[i].data() << " # of events : " << nEvents[i] << endl;
+        cout << run[i]<< " # of events : " << nEvents[i] << endl;
         if(var == "zVtx") h[i] = new TH1D(Form("h%d",i), Form(";%s (cm);Event Fraction",var.data()), nBin, -25, 25); // for zVtx 
         else h[i] = new TH1D(Form("h%d",i), Form(";%s;Event Fraction",var.data()), nBin, 0, xmax);
         //draw and considering Prescl
-        if(presclOn) t1->Draw(Form("%s>>%s",var.data(),h[i]->GetName()),trigCut);
-        else t1->Draw(Form("%s>>%s",var.data(),h[i]->GetName()),trigCut);
+        if(run[i]<263155) t1->Draw(Form("%s>>%s",var.data(),h[i]->GetName()),Form("HLT_HIL1MinimumBiasHF1AND_v1 && %s",trigCut));
+        else t1->Draw(Form("%s>>%s",var.data(),h[i]->GetName()),Form("HLT_HIL1MinimumBiasHF2AND_part1_v1 && %s",trigCut));
     }
 
     TCanvas* can[Nset];
@@ -108,12 +106,12 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
             SetHistColor(h[Ncomp*j+i],colhere[i]);
             if(i==0) h[Ncomp*j+i]->DrawCopy("hist e");
             else h[Ncomp*j+i]->DrawCopy("hist same e");
-            leg[j]->AddEntry(h[Ncomp*j+i], Form("Run %s",run[Ncomp*j+i].data()),"el"); 
+            leg[j]->AddEntry(h[Ncomp*j+i], Form("Run %d",run[Ncomp*j+i]),"el"); 
         }
         leg[j]->Draw();
         drawText(dataset,0.2,0.23);
         drawText(trigCut,0.2,0.2);
-        can[j]->SaveAs(Form("pdf/compareBtwRuns_%s_run%s_%s%s.pdf",dataset,run[Ncomp*j].data(),var.data(),cap));
+        can[j]->SaveAs(Form("pdf/compareBtwRuns_%s_run%d_%s%s.pdf",dataset,run[Ncomp*j],var.data(),cap));
     }
     cout << "c"<<endl;
     TCanvas* cratio[Nset];
@@ -131,7 +129,7 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
             h[Ncomp*j+i]->SetMarkerStyle(20);
             h[Ncomp*j+i]->SetMarkerSize(0.85);
             h[Ncomp*j+i]->GetYaxis()->SetRangeUser(0.5,1.5);
-            h[Ncomp*j+i]->SetTitle(Form(";%s;Run XXX / Run 26%s",var.data(),run[Ncomp*j].data()));
+            h[Ncomp*j+i]->SetTitle(Form(";%s;Run XXX / Run 26%d",var.data(),run[Ncomp*j]));
             if(i==1) h[Ncomp*j+i]->DrawCopy("hist e");
             else h[Ncomp*j+i]->DrawCopy("hist same e");
         }
@@ -140,7 +138,7 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
         drawText(trigCut,0.2,0.2);
         if(var == "zVtx") jumSun(-25,1,25,1);//for zVtx
         else jumSun(0,1,xmax,1);
-        cratio[j]->SaveAs(Form("pdf/compareBtwRuns_%s_ratio_run%s_%s%s.pdf",dataset,run[Ncomp*j].data(),var.data(),cap));
+        cratio[j]->SaveAs(Form("pdf/compareBtwRuns_%s_ratio_run%d_%s%s.pdf",dataset,run[Ncomp*j],var.data(),cap));
     }
 } 
 
