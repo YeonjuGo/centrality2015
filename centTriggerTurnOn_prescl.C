@@ -7,11 +7,13 @@
 
 //////////// modify here as you want!! ////////////////
 const int ntrig =6;
-const char* trig[] = {"L1_Centrality_ext0_5_MinimumumBiasHF1_AND","L1_Centrality_ext0_10_MinimumumBiasHF1_AND","L1_Centrality_ext30_50_MinimumumBiasHF1_AND","L1_Centrality_ext30_100_MinimumumBiasHF1_AND || L1_Centrality_ext30_100_MinimumumBiasHF2_AND","L1_Centrality_ext50_100_MinimumumBiasHF1_AND || L1_Centrality_ext50_100_MinimumumBiasHF2_AND","L1_Centrality_ext70_100_MinimumumBiasHF1_AND"};
+//const char* trig[] = {"(L1_Centrality_ext0_5_MinimumumBiasHF1_AND_Prescl)*(L1_Centrality_ext0_5_MinimumumBiasHF1_AND==1)","(L1_Centrality_ext0_10_MinimumumBiasHF1_AND_Prescl)*(L1_Centrality_ext0_10_MinimumumBiasHF1_AND==1)","(L1_Centrality_ext30_50_MinimumumBiasHF1_AND_Prescl)*(L1_Centrality_ext30_50_MinimumumBiasHF1_AND==1)","(L1_Centrality_ext30_100_MinimumumBiasHF1_AND_Prescl)*(L1_Centrality_ext30_100_MinimumumBiasHF1_AND==1 || L1_Centrality_ext30_100_MinimumumBiasHF2_AND","L1_Centrality_ext50_100_MinimumumBiasHF1_AND || L1_Centrality_ext50_100_MinimumumBiasHF2_AND","L1_Centrality_ext70_100_MinimumumBiasHF1_AND"};
+//const char* trig[] = {"L1_Centrality_ext0_5_MinimumumBiasHF1_AND","L1_Centrality_ext0_10_MinimumumBiasHF1_AND","L1_Centrality_ext30_50_MinimumumBiasHF1_AND","L1_Centrality_ext30_100_MinimumumBiasHF1_AND || L1_Centrality_ext30_100_MinimumumBiasHF2_AND","L1_Centrality_ext50_100_MinimumumBiasHF1_AND || L1_Centrality_ext50_100_MinimumumBiasHF2_AND","L1_Centrality_ext70_100_MinimumumBiasHF1_AND"};
+const char* trig[] = {"L1_Centrality_ext0_5_MinimumumBiasHF1_AND","L1_Centrality_ext0_10_MinimumumBiasHF1_AND","L1_Centrality_ext30_50_MinimumumBiasHF1_AND","L1_Centrality_ext30_100_MinimumumBiasHF2_AND","L1_Centrality_ext50_100_MinimumumBiasHF2_AND","L1_Centrality_ext70_100_MinimumumBiasHF1_AND"};
 const char* legSt[] = {"Cent0-5","Cent0-10","Cent30-50","Cent30-100","Cent50-100","Cent70-100"};
 void Get1DPlots(TTree* t_evt=0, TString v1="hiHF",int xbin=200, double xmin=0, double xmax=4500, TCut cut="",const char* cap="", bool isPassed=1);
 
-void centTriggerTurnOn(
+void centTriggerTurnOn_prescl(
         const char* fname="root://eoscms//eos/cms//store/group/phys_heavyions/velicanu/forest/HIRun2015/HIExpressPhysics/Merged/HIForestExpress_run263261.root",
         const char* type="Run263261_express" 
         )
@@ -37,7 +39,8 @@ void Get1DPlots(TTree* t_evt, TString v1, int xbin, double xmin, double xmax, TC
 
     TCut totcut[ntrig];
     for(int i=0; i<ntrig;i++){
-        totcut[i] = cut && Form("%s==%d",trig[i],(int)isPassed);
+        totcut[i] = cut && Form("(%s_Prescl)*(%s==%d)",trig[i],trig[i],(int)isPassed);
+        //totcut[i] = cut && Form("%s==%d",trig[i],(int)isPassed);
     }
 
     //TCanvas *c_temp= new TCanvas(Form("c_temp_%s",cap), "", 300,300);
@@ -76,7 +79,7 @@ void Get1DPlots(TTree* t_evt, TString v1, int xbin, double xmin, double xmax, TC
     jumSun(60,0.5,60,height);
     jumSun(100,0.5,100,height);
     jumSun(140,0.5,140,height);
-    c_tot->SaveAs(Form("trig_pdf/centTrig_%s_%s.pdf",v1.Data(),cap));
+    c_tot->SaveAs(Form("trig_prescl_pdf/centTrig_prescl_%s_%s.pdf",v1.Data(),cap));
 
     for(int i=0; i<ntrig; i++){
         delete h1D[i];
