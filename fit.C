@@ -9,13 +9,12 @@
 #include "TLine.h"
 #include "TCanvas.h"
 #include <iostream>
-//#include "yjUtility.h"
+#include "yjUtility.h"
 
 using namespace std;
 
-
 static double rangeMin = 200;
-static string date = "20151128";
+static string date = "20160118";
 static bool doUPC = 0;
 static bool express = 0;
 
@@ -23,7 +22,7 @@ double chi2(TH1* h1, TH1* h2){
 
    
    double c = 0;
-
+    int ndof = 0;
 
    for(int i = h1->GetXaxis()->FindBin(rangeMin); i < h1->GetNbinsX()+1; ++i){
       double y1 = h1->GetBinContent(i);
@@ -33,10 +32,13 @@ double chi2(TH1* h1, TH1* h2){
 
       double dy = y1-y2;
       double de2 = e1*e1+e2*e2;
-      if(de2 > 0) c += dy*dy/de2;
-   }
+      if(de2 > 0) { 
+          c += dy*dy/de2;
+          ndof += 1;
+        }
+      }
 
-   return c;
+   return c/ndof;
 }
 
 
@@ -100,7 +102,7 @@ TH1* scale(string var, TTree* nt, double s = 1, TCut cut = ""){
 }
 
 
-void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run = 262548){
+void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run = 262694){
 
    if(cutname == "") cutname = (const char*)dataCut;
    
@@ -109,11 +111,12 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
 
    TFile *infData, *infMC, *infUPC;
    TTree *tref, *t, *tupc;
-
-   if(run == 262784) infData = TFile::Open("root://eoscms.cern.ch//eos/cms//store/group/phys_heavyions/velicanu/forest/Run2015E/HIExpressPhysics/Merged/HIForestExpress_run262784.root");
-   if(run == 262548) infData = TFile::Open("root://eoscms.cern.ch//eos/cms/store/group/phys_heavyions/velicanu/forest/Run2015E/HIExpressPhysics/Merged/HIForestMinbiasUPC_run262548.root");
-   if(run == 262315) infData =  TFile::Open("root://eoscms.cern.ch//eos/cms/store/group/phys_heavyions/velicanu/forest/Run2015E/HIExpressPhysics/Merged/HiForestStreamer_Run262314-262315.root");
-
+    if(run>=262693 && run<=262735) infData = TFile::Open(Form("root://eoscms.cern.ch//eos/cms//store/group/phys_heavyions/velicanu/forest/HIRun2015/HIMinimumBias2/Merged/HiForestPromptReco_%d.root",run));
+    if(run>=262811 && run<=262816) infData = TFile::Open(Form("root://eoscms.cern.ch//eos/cms//store/group/phys_heavyions/velicanu/forest/HIRun2015/HIMinimumBias2/Merged/HIMinimumBias2_run%d.root",run));
+//   if(run == 262784) infData = TFile::Open("root://eoscms.cern.ch//eos/cms//store/group/phys_heavyions/velicanu/forest/Run2015E/HIExpressPhysics/Merged/HIForestExpress_run262784.root");
+ //  if(run == 262548) infData = TFile::Open("root://eoscms.cern.ch//eos/cms/store/group/phys_heavyions/velicanu/forest/Run2015E/HIExpressPhysics/Merged/HIForestMinbiasUPC_run262548.root");
+//   if(run == 262315) infData =  TFile::Open("root://eoscms.cern.ch//eos/cms/store/group/phys_heavyions/velicanu/forest/Run2015E/HIExpressPhysics/Merged/HiForestStreamer_Run262314-262315.root");
+    cout << infData->GetName() << endl;
    infMC = TFile::Open("root://eoscms.cern.ch//eos/cms/store/cmst3/user/mverweij/jetsPbPb/Run2Prep/Hydjet_Quenched_MinBias_5020GeV_750/crab_Run2_HydjetMB/151109_130226/HiForestMerged.root");
    
    if(doUPC) infUPC = TFile::Open("root://eoscms.cern.ch//eos/cms/store/group/phys_heavyions/chflores/Foresting_RunPrep2015/STARLIGHTProd/HiForest_Starlight_Merge19112015.root");
@@ -144,6 +147,9 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
    }
 
    TCut trigger("HLT_HIL1MinimumBiasHF1AND_v1");
+   if(run==262694) trigger="HLT_HIL1MinimumBiasHF1AND_v1";
+   //TCut trigger("HLT_HIL1MinimumBiasHF2AND_v1");
+   //TCut trigger("HLT_HIL1MinimumBiasHF2AND_part2_v1");
    if(express) trigger = "HLT_HIL1MinimumBiasHF1ANDExpress_v1";
 
    href = scale(var,tref,1.,trigger&&dataCut);
@@ -161,7 +167,7 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
    double scaleMin = 0.75;
 
    if(var == "hiHF" || var == "hiHFhit"){
-      scaleMin = 0.45;
+      scaleMin = 0.50;
      // scaleMin = 0.25;
    }
 
@@ -169,8 +175,9 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
       scaleMin = 1.0;
    }
 
-   if(var == "hiEE"){
-      scaleMin = 0.50;
+   if(var == "hiEE" || var == "hiEB" || var == "hiET"){
+      scaleMin = 0.66;
+      //scaleMin = 0.85;
    }
 
 
@@ -197,13 +204,14 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
 
    TCanvas* c1 = new TCanvas("c1","c1",600,600);
    g->GetXaxis()->SetTitle("scale factor");
-   g->GetYaxis()->SetTitle("#chi^2 (unnormalized)");
+   g->GetYaxis()->SetTitle("reduced #chi^2 (normalized by ndf)");
+   //g->GetYaxis()->SetTitle("#chi^2 (unnormalized)");
    g->GetXaxis()->CenterTitle();
    g->GetYaxis()->CenterTitle();
 
    g->Draw("Ap");
 
-   c1->Print(Form("figure_%s_%s_%s_%s_run%d_%s.png","chi2",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
+   c1->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.png","chi2",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
 
    TCanvas* c2 = new TCanvas("c2","c2",600,600);
    c2->SetLogy();
@@ -229,9 +237,10 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
    leg1->AddEntry(h[ibest],"Hydjet based fit","l");
    leg1->AddEntry(h[ibest],Form("Hydjet scaling : %f",s[ibest]),"");
    leg1->AddEntry(h[ibest],Form("Eff+Contam : %f",eff),"");
+   leg1->AddEntry(h[ibest],Form("#chi^{2}/ndf : %f",chi2s[ibest]),"");
    leg1->Draw();
 
-   c2->Print(Form("figure_%s_%s_%s_%s_run%d_%s.png","fit",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
+   c2->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.png","fit",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
 
    TCanvas* c3 = new TCanvas("c3","c3",600,600);
    c3->SetLogx();
@@ -266,7 +275,7 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
    }
    leg2->Draw();
 
-   c3->Print(Form("figure_%s_%s_%s_%s_run%d_%s.png","diff",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
+   c3->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.png","diff",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
 
 
 
