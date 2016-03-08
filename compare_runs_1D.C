@@ -39,39 +39,8 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
     TH1::SetDefaultSumw2(); 
 
     ////////////////////// for HIMinimumBias1
-<<<<<<< HEAD
-    const char* dir = "root://eoscms//eos/cms/store/group/phys_heavyions/azsigmon/HiForestAODPbPb5TeV/HIMinimumBias2/";
-    //const char* dir = "root://eoscms//eos/cms/store/group/phys_heavyions/azsigmon/HiForestAODPbPb5TeV/HIMinimumBias1/";
-    string run[] = 
-    {"262620", "262640", "262656", "262694", "262695", "262703"};
-/*
-    {"262620", "262640", "262656", "262694", "262695", "262703", 
-    "262726", "262735", "262768", "262784", "262811", "262816", 
-    "262818", "262834", "262837", "262893", "262921", "262988", 
-    "263005", "263022", "263035", "263261", "263286", "263322",
-    "263333", "263349", "263362", "263379", "263400", "263410",
-    "263502", "263584"};
- */
-    const int Nrun = sizeof(run)/sizeof(string);
-    const int Ncomp = 5;
-    const int Nset = (int)Nrun/Ncomp + 1; 
-    //const char* trigCut = "(L1_MinimumBiasHF2_AND)";
-    //const char* trigCut = "(HLT_HIL1MinimumBiasHF1AND_v1 && phfCoincFilter3)";
-    //const char* trigCut = "(HLT_HIL1MinimumBiasHF1AND_v1 || HLT_HIL1MinimumBiasHF2AND_v1)";
-    //const char* trigCut = "(HLT_HIL1MinimumBiasHF1AND_v1 || HLT_HIL1MinimumBiasHF2AND_v1) && pcollisionEventSelection";
-    const char* trigCut = "(HLT_HIL1MinimumBiasHF1AND_v1)"; 
-    //const char* trigCut = "(HLT_HIL1MinimumBiasHF2AND_v1) && pcollisionEventSelection";
-    //const char* trigCut = "(HLT_HIL1MinimumBiasHF1ANDExpress_v1) && pprimaryVertexFilter && phfCoincFilter3";
-    const char* cap= "_HIMinimumBias2_HF1AND";
-    //const char* cap= "HF2AND_pcollisionEventSelection";
-    //const char* cap= "HF2AND_nofilter";
-    //const char* cap= "from2620to3400";
-=======
     const char* dir = "/home/goyeonju/CMS/Files/centrality/"; //KOREA UNIV.
     //const char* dir = "root://eoscms//eos/cms/store/group/phys_heavyions/azsigmon/HiForestAODPbPb5TeV/HIMinimumBias1/";//EOS
-
-    //string run[] =
-    //{"262620", "262640", "262656", "262694", "262695", "262703"};
     
        string run[] = 
        {"262620", "262640", "262656", "262694", "262695", "262703", 
@@ -79,7 +48,6 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
        "262818", "262834", "262837", "262893", "262921", "262988", 
        "263005", "263022", "263035", "263261", "263286", "263322",
        "263333", "263349", "263362", "263379", "263400", "263410"};
-       
        //"263502", "263584", "263604", "263614"};
        
     const int Nrun = sizeof(run)/sizeof(string);
@@ -87,7 +55,6 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
     int Nset =0;
     if(Nrun%Ncomp!=0) Nset = (int)Nrun/Ncomp + 1;
     else Nset = (int)Nrun/Ncomp;
->>>>>>> 661c47c1e8ef15ca66d07d00d793589f9e70d51a
 
     int nBin = 50;
     if(var=="hiBin") nBin=50;
@@ -122,10 +89,9 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
         if(presclOn) t1->Draw(Form("%s>>%s",var.data(),h[i]->GetName()),trigCut);
         else t1->Draw(Form("%s>>%s",var.data(),h[i]->GetName()),trigCut);
     }
-    cout << "a" << endl;
+
     TCanvas* can[Nset];
     TLegend* leg[Nset];
-    cout << "b" << endl;
     for(int j=0;j<Nset;j++){
         leg[j] = new TLegend(0.7,0.65,0.95,0.95);
         legStyle(leg[j]);
@@ -134,19 +100,6 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
         //compare between 'Ncomp' runs
         for(int i=0;i<Ncomp;i++){
             if((Ncomp*j+i)>=Nrun) continue;
-<<<<<<< HEAD
-            h[Ncomp*j+i]->Scale(1./nEvents[Ncomp*j+i]); // this is for all!!
-            SetHistColor(h[Ncomp*j+i],colhere[i]);
-            if(i==0) h[Ncomp*j+i]->DrawCopy("hist");
-            else h[Ncomp*j+i]->DrawCopy("hist same");
-            leg[j]->AddEntry(h[Ncomp*j+i], Form("Run %s",run[i].data()),"pl"); 
-        }
-        leg[j]->Draw();
-        can[j]->SaveAs(Form("pdf/compareBtwRuns_run%s_%s%s.pdf",run[Ncomp*j].data(),var.data(),cap));
-    }
-
-    cout << "c" << endl;
-=======
             h[Ncomp*j+i]->Scale(1./nEvents[Ncomp*j+i],"width"); // this is for all!!
             SetHistColor(h[Ncomp*j+i],colhere[i]);
             if(i==0) h[Ncomp*j+i]->DrawCopy("hist e");
@@ -159,7 +112,6 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
         can[j]->SaveAs(Form("pdf/compareBtwRuns_%s_run%s_%s%s.pdf",dataset,run[Ncomp*j].data(),var.data(),cap));
     }
     cout << "c"<<endl;
->>>>>>> 661c47c1e8ef15ca66d07d00d793589f9e70d51a
     TCanvas* cratio[Nset];
     for(int j=0;j<Nset;j++){
         cratio[j] = new TCanvas(Form("cratio%d",j),"",500,500);
@@ -168,39 +120,23 @@ void draw_compare_runs_1D(string var, const char* trigCut, const char* cap, cons
             h[Ncomp*j]->Rebin(2);
         }
         //compare between 'Ncomp' runs
-<<<<<<< HEAD
-        h[Ncomp*j]->Rebin(2);
-        for(int i=1;i<Ncomp;i++){
-            if((Ncomp*j+i)>=Nrun) continue;
-            h[Ncomp*j+i]->Rebin(2); 
-=======
         for(int i=1;i<Ncomp;i++){
             if((Ncomp*j+i)>=Nrun) continue;
             if(var != "hiBin") h[Ncomp*j+i]->Rebin(2); 
->>>>>>> 661c47c1e8ef15ca66d07d00d793589f9e70d51a
             h[Ncomp*j+i]->Divide(h[Ncomp*j]); 
             h[Ncomp*j+i]->SetMarkerStyle(20);
             h[Ncomp*j+i]->SetMarkerSize(0.85);
             h[Ncomp*j+i]->GetYaxis()->SetRangeUser(0.5,1.5);
             h[Ncomp*j+i]->SetTitle(Form(";%s;Run XXX / Run 26%s",var.data(),run[Ncomp*j].data()));
-<<<<<<< HEAD
-            if(i==1) h[Ncomp*j+i]->DrawCopy("hist");
-            else h[Ncomp*j+i]->DrawCopy("hist same");
-=======
             if(i==1) h[Ncomp*j+i]->DrawCopy("hist e");
             else h[Ncomp*j+i]->DrawCopy("hist same e");
->>>>>>> 661c47c1e8ef15ca66d07d00d793589f9e70d51a
         }
         leg[j]->Draw();
         drawText(dataset,0.2,0.23);
         drawText(trigCut,0.2,0.2);
         if(var == "zVtx") jumSun(-25,1,25,1);//for zVtx
         else jumSun(0,1,xmax,1);
-<<<<<<< HEAD
-        cratio[j]->SaveAs(Form("pdf/compareBtwRuns_ratio_run%s_%s%s.pdf",run[Ncomp*j].data(),var.data(),cap));
-=======
         cratio[j]->SaveAs(Form("pdf/compareBtwRuns_%s_ratio_run%s_%s%s.pdf",dataset,run[Ncomp*j].data(),var.data(),cap));
->>>>>>> 661c47c1e8ef15ca66d07d00d793589f9e70d51a
     }
 } 
 
