@@ -20,17 +20,18 @@
 #include "TProfile.h"
 #include "TPad.h"
 #include "stdio.h"
-#include "yjUtility.h"
+#include "../yjUtility.h"
 
 //////////// modify here as you want!! ////////////////
-const int nfilter = 7;
-const char* evtfilter[] = {"","pBeamScrapingFilter","pPAprimaryVertexFilter","pHBHENoiseFilterResultProducer","phfCoincFilter","phfCoincFilter3","PAcollisionEventSelection"};
+const int nfilter = 5;
+const char* evtfilter[] = {"","pprimaryVertexFilter", "phfCoincFilter3", "pclusterCompatibilityFilter", "pcollisionEventSelection"}; 
+//const char* evtfilter[] = {"","pBeamScrapingFilter","pPAprimaryVertexFilter","pHBHENoiseFilterResultProducer","phfCoincFilter","phfCoincFilter3","PAcollisionEventSelection"};
 const double dy= 0.5;
 
 void Get2DEffPlots(TTree* t_evt=0, TString v1="hiHF", TString v2="hiNpix", int xbin=200, double xmin=0, double xmax=4500, int ybin=200, double ymin=0, double ymax=10000, TCut cut="", const char* cap="",bool isPassed=1);
 
-void filterDep_2D(const char* fname="root://eoscms//eos/cms//store/group/phys_heavyions/velicanu/forest/Run2015E/ExpressPhysics/Merged/ExpressHiForest_run262163-262172_1.4M.root",
-        TCut trig = "HLT_L1MinimumBiasHF1OR_part1_v1")
+void filterDep_2D(const char* fname="/home/goyeonju/CMS/Files/centrality/EventTree_PbPb_data_HIMinimumBias2_run262620_15Feb.root",
+        TCut trig = "HLT_HIL1MinimumBiasHF1AND_v1")
 {
     TH1::SetDefaultSumw2();
     gStyle -> SetOptStat(0);
@@ -73,11 +74,18 @@ void Get2DEffPlots(TTree* t_evt, TString v1, TString v2, int xbin, double xmin, 
         h2D[i]=(TH2D*)gDirectory->Get(h2D[i]->GetName());
     }
     TCanvas *c_tot = new TCanvas("c_temp", "c_temp", 300*nfilter, 300);
+    TCanvas *c[nfilter];
     c_tot->Divide(nfilter,1);
     for(int i=0;i<nfilter;i++){
         c_tot->cd(i+1);
         h2D[i]->Draw("colz");
         gPad->SetLogz();
+
+        c[i] = new TCanvas(Form("c%d",i), "", 300, 300);
+        c[i]->cd();
+        h2D[i]->Draw("colz");
+        gPad->SetLogz();
+        c[i]->SaveAs(Form("pdf/filterDep_2D_%s_%s_%s_isPassed%d_%s.pdf", v1.Data(),v2.Data(),cap,(int)isPassed, evtfilter[i]));
     }
     c_tot->SaveAs(Form("pdf/filterDep_2D_%s_%s_%s_isPassed%d.pdf", v1.Data(),v2.Data(),cap,(int)isPassed));
 }

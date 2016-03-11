@@ -86,7 +86,7 @@ TH1* scale(string var, TTree* nt, double s = 1, TCut cut = ""){
 
 
 
-    TH1D* h = new TH1D("h",Form("h;%s [GeV];event fraction",var.data()),nbins,xmin,xmax);
+    TH1D* h = new TH1D("h",Form(";%s [GeV];event fraction",var.data()),nbins,xmin,xmax);
     h->GetXaxis()->CenterTitle();
     h->GetYaxis()->CenterTitle();
 
@@ -127,7 +127,7 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
 
     tref->AddFriend("hltanalysis/HltTree");
     tref->AddFriend("skimanalysis/HltTree");
-    tref->AddFriend("anaTrack/trackTree");
+    //tref->AddFriend("anaTrack/trackTree");
 
     t->AddFriend("hltanalysis/HltTree");
     t->AddFriend("skimanalysis/HltTree");
@@ -222,12 +222,15 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
 
     h[ibest]->SetMaximum(10.*h[ibest]->GetMaximum());
     h[ibest]->Draw("hist");
+    href->SetMarkerStyle(20);
+    href->SetMarkerSize(0.8);
     href->Draw("same");
     TLine* vertical = new TLine(rangeMin, h[ibest]->GetMinimum(), rangeMin, h[ibest]->GetMaximum());
     vertical->SetLineStyle(2);
     vertical->Draw("same");
 
-    TLegend * leg1 = new TLegend(0.4,0.6,0.95,0.9);
+    TLegend * leg1 = new TLegend(0.4,0.6,0.90,0.85);
+    //TLegend * leg1 = new TLegend(0.4,0.6,0.95,0.9);
     leg1->SetFillStyle(1);
     leg1->SetFillColor(0);
     leg1->SetBorderSize(0);
@@ -245,6 +248,7 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
     leg1->Draw();
 
     c2->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.png","fit",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
+    c2->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.pdf","fit",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
 
     TCanvas* c3 = new TCanvas("c3","c3",600,600);
     c3->SetLogx();
