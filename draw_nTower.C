@@ -17,17 +17,24 @@
 #include "TPad.h"
 #include "TLatex.h"
 #include "stdio.h"
-#include "../../yjUtility.h"
+#include "../yjUtility.h"
 const int rebinN = 5;
 float normHistHere(TH1* hNom=0, TH1* hDen=0, TH1* hRatio=0, double cut_i=700, double cut_f=900);
+void nTower_plot(double *thr, const char* var = "e", int run=262694, const char* cap="pVtx_hfCoinc3", float norm_i = 150, float norm_f=700);
 
 void draw_nTower(){
+
+    double etthr[] = {0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0};
+    double ethr[] = {1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0};
+    nTower_plots(ethr, "e", 262694, 150, 700);
+    nTower_plots(etthr, "et", 262694, 150, 700);
+}
+
+void nTower_plot(double *thr, const char* var, int run, const char* cap, float norm_i, float norm_f){
     SetHistTitleStyle();
     SetyjPadStyle();
     gStyle -> SetOptStat(0);
 
-    double thr[] = {0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0};
-    //double thr[] = {0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0};
     int nbin = sizeof(thr)/sizeof(double);
     double thrArr[nbin+1];
     for(int i=0;i<nbin+1;i++){
@@ -35,22 +42,19 @@ void draw_nTower(){
         if(i!=nbin) thrArr[i] = thr[i]-binwidth;
         else thrArr[i] = thr[nbin-1]+binwidth;
     }
-#if 1    
-    TH1D* h1D_e = new TH1D("h1D_e_ratio",";(# of HF tower) E Threshold (GeV);DATA/MC Ratio", nbin,thrArr);
+    
+    TH1D* h1D_e = new TH1D(Form("h1D_%s_ratio",var),Form(";(# of HF tower) %s Threshold (GeV);DATA/MC Ratio",var), nbin,thrArr);
+    h1D_e->SetTitleOffset(1.5, "Y");
     for(int i=0;i<nbin;i++){
-        cout << "START transverse energy threshold : " << thr[i] << endl;
-        TFile* f = new TFile(Form("histfiles/nTower_eThr%.1f_etThr0.0.root",thr[i]));
+        cout << "START " << var << " threshold : " << thr[i] << endl;
+        TFile* f = new TFile(Form("histfiles/nTower_run%d_%sThr%.1f_%s.root",run,var,thr[i],cap));
         TH1F* hdata = (TH1F*) f->Get("h1F_sample0");
         TH1F* hmc = (TH1F*) f->Get("h1F_sample1");
         hdata->GetYaxis()->SetRangeUser(0.1,100000);
         hmc->GetYaxis()->SetRangeUser(0.1,100000);
         TH1F* hratio = (TH1F*) hdata->Clone("h1F_ratio");
-        float norm_i = 300;
-        float norm_f = 700;
         float ratio = normHistHere(hdata, hmc, hratio, norm_i, norm_f);
         h1D_e->SetBinContent(i+1,ratio);
-
-        //cout << ratio << endl;
 
         TCanvas *c = new TCanvas("c","c", 500,1000);
         c->Divide(1,2);
@@ -58,8 +62,7 @@ void draw_nTower(){
         gPad->SetLogy();
         hdata->DrawCopy();
         hmc->DrawCopy("hist same");
-        //drawText(Form("tower et > 0.0"), 0.46,0.80);
-        drawText(Form("tower e > %.1f",thr[i]), 0.46,0.88);
+        drawText(Form("tower %s > %.1f",var,thr[i]), 0.46,0.88);
         Double_t range = cleverRange(hdata,hmc);
         jumSun(norm_i, 0.1, norm_i, range);
         jumSun(norm_f, 0.1, norm_f, range);
@@ -71,54 +74,11 @@ void draw_nTower(){
         hratio->DrawCopy();
         jumSun(0, 1, 1000, 1);
         drawText(Form("DATA/MC = %.3f", ratio), 0.26,0.88);
-        c->SaveAs(Form("png/nTower_eThr%.1f_etThr0.0_normRange%dto%d.png",thr[i],(int)norm_i,(int)norm_f));
+        c->SaveAs(Form("pdf/nTower_run%d_%sThr%.1f_normRange%dto%d_%s.pdf",run,var,thr[i],(int)norm_i,(int)norm_f,cap));
     }
     TCanvas* c_e = new TCanvas("c_e", "",300,300);
     h1D_e->Draw("hist");
-    c_e->SaveAs("png/eThr_vs_ratio_distribution.png");
-
-#endif
-    TH1D* h1D_et = new TH1D("h1D_et_ratio",";(# of HF tower) E_{T} Threshold (GeV);DATA/MC Ratio", nbin,thrArr);
-   for(int i=0;i<nbin;i++){
-        cout << "START transverse energy threshold : " << thr[i] << endl;
-        TFile* f = new TFile(Form("histfiles/recTower_n_eThr0.0_etThr%.1f.root",thr[i]));
-        TH1F* hdata = (TH1F*) f->Get("h1F_sample0");
-        TH1F* hmc = (TH1F*) f->Get("h1F_sample1");
-        hdata->GetYaxis()->SetRangeUser(0.1,100000);
-        hmc->GetYaxis()->SetRangeUser(0.1,100000);
-        TH1F* hratio = (TH1F*) hdata->Clone("h1F_ratio");
-        float norm_i = 100;
-        float norm_f = 700;
-        //if(i>5) { norm_i=200; norm_f=400; }
-        float ratio = normHistHere(hdata, hmc, hratio, norm_i, norm_f);
-        h1D_et->SetBinContent(i+1,ratio);
-
-        TCanvas *c = new TCanvas("c","c", 500,1000);
-        c->Divide(1,2);
-        c->cd(1);
-        gPad->SetLogy();
-        hdata->DrawCopy();
-        hmc->DrawCopy("hist same");
-        drawText(Form("tower et > %.1f",thr[i]), 0.46,0.80);
-        //drawText(Form("tower e > 0.0"), 0.46,0.88);
-        Double_t range = cleverRange(hdata,hmc);
-        jumSun(norm_i, 0.1, norm_i, range);
-        jumSun(norm_f, 0.1, norm_f, range);
-        c->cd(2);    
-        hratio->Rebin(rebinN);
-        hratio->Scale(1./rebinN);
-        hratio->GetYaxis()->SetTitle("DATA/MC");
-        hratio->GetYaxis()->SetRangeUser(0,2);
-        hratio->DrawCopy();
-        jumSun(0, 1, 1000, 1);
-        drawText(Form("DATA/MC = %.4f", ratio), 0.26,0.88);
-        c->SaveAs(Form("png/nTower_eThr0.0_etThr%.1f_normRange%dto%d.png",thr[i],(int)norm_i,(int)norm_f));
-    }
-
-    TCanvas* c_et = new TCanvas("c_e", "",300,300);
-    h1D_et->Draw("hist");
-    c_et->SaveAs("png/etThr_vs_ratio_distribution.png");
-
+    c_e->SaveAs(Form("pdf/run%d_%sThr_vs_ratio_distribution_%s.pdf",run,var,cap));
 }
 
 
