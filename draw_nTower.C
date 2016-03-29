@@ -48,7 +48,6 @@ void nTower_plots(double *thr, int nbin, const char* var, int run, const char* c
     double ratio[nbin];
     TH1D* h1D_e = new TH1D(Form("h1D_%s_ratio",var),Form(";(# of HF tower) %s threshold (GeV);DATA/MC",var), nbin,thrArr);
     h1D_e->SetTitleOffset(1.5, "Y");
-    h1D_e->SetNdivisions(505);
     for(int i=0;i<nbin;i++){
         cout << "START " << var << " threshold : " << thr[i] << endl;
         TFile* f = new TFile(Form("histfiles/nTower_run%d_%sThr%.1f%s.root",run,var,thr[i],cap));
@@ -63,16 +62,18 @@ void nTower_plots(double *thr, int nbin, const char* var, int run, const char* c
         c->Divide(1,2);
         c->cd(1);
         gPad->SetLogy();
+        //hdata->SetTitle(";the number of HF towers above threshold;Events");
         hdata->SetNdivisions(505);
         hmc->SetNdivisions(505);
+        hratio->SetNdivisions(505);
         Double_t range = cleverRange(hdata,hmc);
         hdata->GetYaxis()->SetRangeUser(0.1,range);
         hmc->GetYaxis()->SetRangeUser(0.1,range);
-        jumSun(norm_i, 0.1, norm_i, range);
-        jumSun(norm_f, 0.1, norm_f, range);
-        drawText(Form("tower %s > %.1f",var,thr[i]), 0.46,0.88,18);
         hdata->DrawCopy();
         hmc->DrawCopy("hist same");
+        drawText(Form("tower %s > %.1f",var,thr[i]), 0.26,0.88);
+        jumSun(norm_i, 0.1, norm_i, range);
+        jumSun(norm_f, 0.1, norm_f, range);
         c->cd(2);    
         hratio->Rebin(rebinN);
         hratio->Scale(1./rebinN); 
@@ -80,7 +81,7 @@ void nTower_plots(double *thr, int nbin, const char* var, int run, const char* c
         hratio->GetYaxis()->SetRangeUser(0,2);
         hratio->DrawCopy();
         jumSun(0, 1, 1000, 1);
-        drawText(Form("DATA/MC = %.3f", ratio[i]), 0.26,0.88,18);
+        drawText(Form("DATA/MC = %.3f", ratio[i]), 0.26,0.88);
         c->SaveAs(Form("pdf/nTower_run%d_%sThr%.1f_normRange%dto%d%s.pdf",run,var,thr[i],(int)norm_i,(int)norm_f,cap));
     }
     TCanvas* c_e = new TCanvas("c_e", "",300,300);
