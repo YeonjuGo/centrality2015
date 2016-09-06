@@ -14,9 +14,11 @@
 using namespace std;
 
 static double rangeMin = 200;
-static string date = "20160307";
+//static string date = "20160314";
 static bool doUPC = 0;
+static bool doLargeRangeMin= 0;
 static bool express = 0;
+TDatime* date = new TDatime();
 
 double chi2(TH1* h1, TH1* h2){
 
@@ -38,6 +40,7 @@ double chi2(TH1* h1, TH1* h2){
         }
     }
 
+    //return c;
     return c/ndof;
 }
 
@@ -52,36 +55,43 @@ TH1* scale(string var, TTree* nt, double s = 1, TCut cut = ""){
     if(var == "hiET"){
         xmax = 2000;
         rangeMin = 100;
+        if(doLargeRangeMin) rangeMin = 200;
     }
 
     if(var == "hiEB"){
         xmax = 5000;
         rangeMin = 200;
+        if(doLargeRangeMin) rangeMin = 400;
     }
 
     if(var == "hiEE"){
         xmax = 4000;
         rangeMin = 200;
+        if(doLargeRangeMin) rangeMin = 400;
     }
 
     if(var == "hiHF"){
         xmax = 6000;
         rangeMin = 200;
+        if(doLargeRangeMin) rangeMin = 1000;
     }
 
     if(var == "hiHFhit"){
         xmax = 200000;
         rangeMin = 10000;
+        if(doLargeRangeMin) rangeMin = 50000;
     }
 
     if(var == "hiNpix"){
         xmax = 50000;
         rangeMin = 1500;
+        if(doLargeRangeMin) rangeMin = 3000;
     }
 
     if(var == "hiNtracks"){
         xmax = 4000;
         rangeMin = 200;
+        if(doLargeRangeMin) rangeMin = 400;
     }
 
 
@@ -102,7 +112,7 @@ TH1* scale(string var, TTree* nt, double s = 1, TCut cut = ""){
 }
 
 
-void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run = 262694){
+void fit(string var = "hiHF", TCut dataCut = "pcollisionEventSelection", string cutname = "hiHF_pcollisionEventSelection", int run = 262640, string mc="hydjet"){
 
     if(cutname == "") cutname = (const char*)dataCut;
 
@@ -116,9 +126,16 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
     //    if(run>=262811 && run<=262816) infData = TFile::Open(Form("root://eoscms.cern.ch//eos/cms//store/group/phys_heavyions/velicanu/forest/HIRun2015/HIMinimumBias2/Merged/HIMinimumBias2_run%d.root",run));
 
     cout << infData->GetName() << endl;
-    infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/Hydjet_Quenched_MinBias_5020GeV_758p2_FOREST-v31.root");
+    if(mc=="epos") infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/HiForest_Epos_merged_60k_v1.root");
+    else if (mc=="hydjet") infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/Hydjet_Quenched_MinBias_5020GeV_758p2_FOREST-v31.root");
+    //else if (mc=="newHydjet") infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/HiForestAOD_HYDJET_Drum5Nv75_5020GeV_cmssw758patch3_genPtThr500GeV_merged.root");
+    else if (mc=="CymbalEv5") infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/HiForest_Hydjet_Quenched_MinBias_Cymbal5Ev5.root");
+    else if (mc=="CymbalEv4") infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/HiForest_Hydjet_Quenched_MinBias_Cymbal5Ev4.root");
+    else if (mc=="CymbalEv3") infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/HiForest_Hydjet_Quenched_MinBias_Cymbal5Ev3.root");
+    else if (mc=="CymbalEv2") infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/HiForest_Hydjet_Quenched_MinBias_Cymbal5Ev2.root");
+    else if (mc=="CymbalEv1") infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/HiForest_Hydjet_Cymbal5Ev1_MinBias_5020GeV.root");
+    //else if (mc=="newHydjet") infMC = TFile::Open("/home/goyeonju/CMS/Files/centrality/HiForest_Hydjet_Quenched_MinBias_Cymbal5Ev2.root");
     //infMC = TFile::Open("root://eoscms.cern.ch//eos/cms/store/cmst3/user/mverweij/jetsPbPb/Run2Prep/Hydjet_Quenched_MinBias_5020GeV_750/crab_Run2_HydjetMB/151109_130226/HiForestMerged.root");
-
     if(doUPC) infUPC = TFile::Open("root://eoscms.cern.ch//eos/cms/store/group/phys_heavyions/chflores/Foresting_RunPrep2015/STARLIGHTProd/HiForest_Starlight_Merge19112015.root");
 
     tref = (TTree*)infData->Get("hiEvtAnalyzer/HiTree");
@@ -166,24 +183,79 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
     double variation = 0.2;
     double scaleMin = 0.75;
 
-    if(var == "hiHF" || var == "hiHFhit"){
+    if(var == "hiHF"){
         scaleMin = 0.50;
-        // scaleMin = 0.25;
+        if(mc =="epos") scaleMin = 0.80;
+        else if(mc =="newHydjet") scaleMin = 0.95;
+        else if(mc =="CymbalEv5") scaleMin = 1.05;
+        else if(mc =="CymbalEv4") scaleMin = 1.15;
+        else if(mc =="CymbalEv3") scaleMin = 0.90;
+        else if(mc =="CymbalEv2") scaleMin = 0.70;
+        else if(mc =="CymbalEv1") scaleMin = 0.70;
+    }
+    if(var == "hiHFhit"){
+        scaleMin = 0.50;
+        if(mc =="epos") scaleMin = 0.80;
+        else if(mc =="newHydjet") scaleMin = 0.95;
+        else if(mc =="CymbalEv5") scaleMin = 1.15;
+        else if(mc =="CymbalEv4") scaleMin = 1.25;
+        else if(mc =="CymbalEv3") scaleMin = 1.00;
+        else if(mc =="CymbalEv2") scaleMin = 0.80;
+        else if(mc =="CymbalEv1") scaleMin = 0.70;
     }
 
     if(var == "hiNpix"){
-        scaleMin = 1.0;
+        scaleMin = 1.05;
+        if(mc =="epos") scaleMin = 1.15;
+        else if(mc =="newHydjet") scaleMin = 1.1;
+        else if(mc =="CymbalEv4") scaleMin = 1.10;
+        else if(mc =="CymbalEv5") scaleMin = 1.10;
     }
 
-    if(var == "hiEE" || var == "hiEB" || var == "hiET"){
-        scaleMin = 0.66;
+    if(var == "hiNtracks"){
+        scaleMin = 0.90;
+        if(mc =="epos") scaleMin = 1.14;
+        else if(mc =="newHydjet") scaleMin = 0.95;
+        else if(mc =="CymbalEv5") scaleMin = 1.00;
+        else if(mc =="CymbalEv2") scaleMin = 0.90;
+        else if(mc =="CymbalEv1") scaleMin = 0.90;
+    }
+    
+    if(var == "hiNpixelTracks"){
+        scaleMin = 1.00;
+        if(mc =="epos") scaleMin = 1.14;
+        else if(mc =="newHydjet") scaleMin = 0.95;
+        //else if(mc =="CymbalEv2") scaleMin = 0.90;
+    }
+
+    if(var == "hiEB"){
+        scaleMin = 0.95;
+        if(mc =="epos") scaleMin = 1.40;
+        else if(mc =="newHydjet") scaleMin = 1.10;
+        else if(mc =="CymbalEv4") scaleMin = 1.05;
+        else if(mc =="CymbalEv5") scaleMin = 1.05;
+        //scaleMin = 0.85;
+    }
+    
+    if(var == "hiEE"){
+        scaleMin = 1.00;
+        if(mc =="epos") scaleMin = 1.40;
+        else if(mc =="newHydjet") scaleMin = 1.10;
+        else if(mc =="CymbalEv3") scaleMin = 1.15;
+        else if(mc =="CymbalEv4") scaleMin = 1.30;
+        else if(mc =="CymbalEv5") scaleMin = 1.25;
+        //scaleMin = 0.85;
+    }
+    if(var == "hiET"){
+        scaleMin = 0.95;
+        if(mc =="epos") scaleMin = 1.40;
+        else if(mc =="newHydjet") scaleMin = 0.95;
+        else if(mc =="CymbalEv5") scaleMin = 1.00;
         //scaleMin = 0.85;
     }
 
-
-
     for(int i = 0; i < N; ++i){  
-
+        //h[i]->SetName(Form("h%d",i));
         s[i] = scaleMin+(variation/N)*i;
         h[i] = scale(var,t,s[i]);
         h[i]->SetLineColor(2);
@@ -194,12 +266,13 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
 
     }
 
-    double eff = href->Integral()/h[ibest]->Integral();
+    double eff = href->Integral()/(href->Integral(href->GetXaxis()->FindBin(rangeMin)+1,href->GetNbinsX()+1) + h[ibest]->Integral(0,h[ibest]->GetXaxis()->FindBin(rangeMin)));
+    //double eff = href->Integral()/h[ibest]->Integral();
 
     cout<<"the best scale is : "<<s[ibest]<<" i = "<<ibest<<endl;   
     cout<<"efficiency+contamination is : "<<eff<<endl;
 
-    ofstream outputf(Form("centEff_fitResults_%s.txt",cutname.data()), ios::app);
+    ofstream outputf(Form("txt/centEff_fitResults_%s_%s.txt",cutname.data(),mc.data()), ios::app);
     outputf << run << "\t" << setprecision(4) <<eff*100 << "\t" << chi2s[ibest] << endl;
     outputf.close();
 
@@ -214,8 +287,8 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
     g->GetYaxis()->CenterTitle();
     g->SetMarkerStyle(20);
     g->Draw("Ap");
-
-    c1->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.png","chi2",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
+    g->GetYaxis()->SetRangeUser(0.78,3.62);
+    c1->Print(Form("figures/figure_%s_%s_%s_%s_%s_run%d_%d.pdf","chi2",var.data(),(const char*)trigger,cutname.data(),mc.data(),run,date->GetDate()));
 
     TCanvas* c2 = new TCanvas("c2","c2",600,600);
     c2->SetLogy();
@@ -241,14 +314,14 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
     leg1->AddEntry(href,trigger,"");
     leg1->AddEntry(href,dataCut,"");
 
-    leg1->AddEntry(h[ibest],"Hydjet based fit","l");
-    leg1->AddEntry(h[ibest],Form("Hydjet scaling : %f",s[ibest]),"");
+    leg1->AddEntry(h[ibest],Form("%s based fit",mc.data()),"l");
+    leg1->AddEntry(h[ibest],Form("%s scaling : %f",mc.data(),s[ibest]),"");
     leg1->AddEntry(h[ibest],Form("Eff+Contam : %f",eff),"");
     leg1->AddEntry(h[ibest],Form("#chi^{2}/ndf : %f",chi2s[ibest]),"");
     leg1->Draw();
 
-    c2->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.png","fit",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
-    c2->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.pdf","fit",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
+//    c2->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.png","fit",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
+    c2->Print(Form("figures/figure_%s_%s_%s_%s_%s_run%d_%d.pdf","fit",var.data(),(const char*)trigger,cutname.data(),mc.data(),run,date->GetDate()));
 
     TCanvas* c3 = new TCanvas("c3","c3",600,600);
     c3->SetLogx();
@@ -283,7 +356,7 @@ void fit(string var = "hiHFhit", TCut dataCut = "", string cutname = "", int run
     }
     leg2->Draw();
 
-    c3->Print(Form("figures/figure_%s_%s_%s_%s_run%d_%s.png","diff",var.data(),(const char*)trigger,cutname.data(),run,date.data()));
+    c3->Print(Form("figures/figure_%s_%s_%s_%s_%s_run%d_%d.pdf","diff",var.data(),(const char*)trigger,cutname.data(),mc.data(),run,date->GetDate()));
 
 }
 
